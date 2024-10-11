@@ -20,5 +20,8 @@
     device policies or APIs.
     -->
     <string-array translatable="false" name="vendor_policy_exempt_apps">
+        <item>com.blackduck.updater</item>
+        <item>com.blackduck.push</item>
+        <item>com.blackduck.systemupdater</item>
     </string-array>
 </resources>
