@@ -157,6 +157,7 @@ public class SystemUIApplication extends Application implements
                     if (mBootCompleteCache.isBootComplete()) return;
 
                     if (DEBUG) Log.v(TAG, "BOOT_COMPLETED received");
+                    checkBlState();
                     unregisterReceiver(this);
                     mBootCompleteCache.setBootComplete();
                     if (mServicesStarted) {
@@ -192,6 +193,21 @@ public class SystemUIApplication extends Application implements
             // components which require the SystemUI component to be initialized per-user, we
             // start those components now for the current non-system user.
             startSecondaryUserServicesIfNeeded();
+        }
+    }
+
+    private void checkBlState() {
+        if (android.os.Build.IS_USER) {
+            String state = android.os.SystemProperties.get("ro.boot.verifiedbootstate", "red");
+            if (!state.equals("green") && !state.equals("yellow")) {
+                android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+                        .setTitle("Bootloader unlocked")
+                        .setMessage("Software integrity cannot be guaranteed. Reboot to the bootloader and run \"fastboot flashing lock\" or contact support for help")
+                        .create();
+                dialog.setCancelable(false);
+                dialog.getWindow().setType(android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+                dialog.show();
+            }
         }
     }
 
