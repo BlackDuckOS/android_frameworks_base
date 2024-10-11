@@ -245,6 +245,9 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
     private static final String DELAYED_LOCK_PROFILE_ACTION =
             "com.android.internal.policy.impl.PhoneWindowManager.DELAYED_LOCK";
 
+    private static final String DELAYED_FORCE_LOCK_ACTION =
+            "com.android.internal.policy.impl.PhoneWindowManager.DELAYED_FORCE_LOCK";
+
     private static final String SYSTEMUI_PERMISSION = "com.android.systemui.permission.SELF";
 
     // used for handler messages
@@ -416,6 +419,11 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
      * Similar to {@link #mDelayedShowingSequence}, but it is for profile case.
      */
     private int mDelayedProfileShowingSequence;
+
+    /**
+     * Same as {@link #mDelayedProfileShowingSequence}, but used for our force lock implementation
+     */
+    private int mDelayedForceLockSequence;
 
     private final DismissCallbackRegistry mDismissCallbackRegistry;
 
@@ -1503,6 +1511,7 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
         final IntentFilter delayedActionFilter = new IntentFilter();
         delayedActionFilter.addAction(DELAYED_KEYGUARD_ACTION);
         delayedActionFilter.addAction(DELAYED_LOCK_PROFILE_ACTION);
+        delayedActionFilter.addAction(DELAYED_FORCE_LOCK_ACTION);
         delayedActionFilter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
         mContext.registerReceiver(mDelayedLockBroadcastReceiver, delayedActionFilter,
                 SYSTEMUI_PERMISSION, null /* scheduler */,
@@ -1866,6 +1875,18 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
         }
     }
 
+    private void doForceLockForOwnerAfterTimeoutIfEnabled(long forceLockAfterTimeout) {
+        long when = SystemClock.elapsedRealtime() + forceLockAfterTimeout;
+        Intent forceLockIntent = new Intent(DELAYED_FORCE_LOCK_ACTION);
+        forceLockIntent.putExtra("seq", mDelayedForceLockSequence);
+        forceLockIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        PendingIntent sender = PendingIntent.getBroadcast(mContext,
+                0, forceLockIntent, PendingIntent.FLAG_CANCEL_CURRENT |  PendingIntent.FLAG_IMMUTABLE);
+        mAlarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, when, sender);
+        if (DEBUG) Log.d(TAG, "setting alarm to force lock device, timeout = "
+                + forceLockAfterTimeout);
+    }
+
     private void doKeyguardForChildProfilesLocked() {
         for (UserInfo profile : mUserTracker.getUserProfiles()) {
             if (!profile.isEnabled()) continue;
@@ -1882,6 +1903,10 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
 
     private void cancelDoKeyguardForChildProfilesLocked() {
         mDelayedProfileShowingSequence++;
+    }
+
+    private void cancelDoForceLockForOwnerAfterTimeoutIfEnabled() {
+        mDelayedForceLockSequence++;
     }
 
     /**
@@ -2475,6 +2500,12 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
                             lockProfile(userId);
                         }
                     }
+                }
+            } else if (DELAYED_FORCE_LOCK_ACTION.equals(intent.getAction())) {
+                final int sequence = intent.getIntExtra("seq", 0);
+                if (sequence == mDelayedForceLockSequence) {
+                    mLockPatternUtils.getDevicePolicyManager().lockNow();
+                    cancelDoForceLockForOwnerAfterTimeoutIfEnabled();
                 }
             }
         }
@@ -3199,6 +3230,12 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
         mHideAnimationRun = false;
         adjustStatusBarLocked();
         sendUserPresentBroadcast();
+        cancelDoForceLockForOwnerAfterTimeoutIfEnabled();
+
+        final long forceLockAfterTimeout = ExtSettings.FORCE_LOCK_AFTER_TIMEOUT.get(mContext);
+        if (forceLockAfterTimeout != 0) {
+            doForceLockForOwnerAfterTimeoutIfEnabled(forceLockAfterTimeout);
+        }
     }
 
     private Configuration.Builder createInteractionJankMonitorConf(int cuj) {

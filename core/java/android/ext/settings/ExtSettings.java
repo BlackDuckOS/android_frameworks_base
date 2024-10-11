@@ -35,6 +35,11 @@ public class ExtSettings {
             // default value: 18 hours
             (int) TimeUnit.HOURS.toMillis(18));
 
+    public static final IntSetting FORCE_LOCK_AFTER_TIMEOUT = new IntSetting(
+            Setting.Scope.GLOBAL, "force_lock_after_timeout",
+            // default value: disabled
+            0);
+
     public static final BoolSetting SCREENSHOT_TIMESTAMP_EXIF = new BoolSetting(
             Setting.Scope.PER_USER, Settings.Secure.SCREENSHOT_TIMESTAMP_EXIF, false);
 
