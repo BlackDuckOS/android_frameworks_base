@@ -5399,4 +5399,9 @@
   <java-symbol type="bool" name="config_GoogleCamera_needs_seinfo_for_access_to_accelerators" />
 
   <java-symbol type="string" name="config_gnssPsdsType" />
+  
+  <!-- BlackDuck added -->
+  <java-symbol type="string" name="global_action_wipe" />
+  <java-symbol type="string" name="global_action_wipe_hint" />
+  <java-symbol type="drawable" name="wipe_icon" />
 </resources>

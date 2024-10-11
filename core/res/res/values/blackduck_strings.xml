@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- label for item that wipe device form the phone options dialog [CHAR LIMIT=24]-->
+    <string name="global_action_wipe">Wipe</string>
+    <string name="global_action_wipe_hint">"If you really want to wipe all data, hold this button"</string>
+</resources>

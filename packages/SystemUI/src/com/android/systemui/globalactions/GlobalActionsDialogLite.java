@@ -84,8 +84,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
+import android.widget.*;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.ListPopupWindow;
@@ -185,6 +184,7 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
     static final String GLOBAL_ACTION_KEY_RESTART = "restart";
     private static final String GLOBAL_ACTION_KEY_LOGOUT = "logout";
     static final String GLOBAL_ACTION_KEY_EMERGENCY = "emergency";
+    static final String GLOBAL_ACTION_KEY_WIPE = "wipe";
     static final String GLOBAL_ACTION_KEY_SCREENSHOT = "screenshot";
 
     // See NotificationManagerService#scheduleDurationReachedLocked
@@ -659,6 +659,8 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
                 if (shouldDisplayEmergency()) {
                     addIfShouldShowAction(tempActions, new EmergencyDialerAction());
                 }
+            }  else if (GLOBAL_ACTION_KEY_WIPE.equals(actionKey)) {
+                addIfShouldShowAction(tempActions, new WipeImplAction());
             } else {
                 Log.e(TAG, "Invalid global action key " + actionKey);
             }
@@ -853,6 +855,53 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         }
     }
 
+    protected abstract class WipeAction extends SinglePressAction implements LongPressAction {
+        WipeAction(int iconResId, int messageResId) {
+            super(iconResId, messageResId);
+        }
+
+        @Override
+        public boolean onLongPress() {
+            // Factory reset the device.
+            Intent intent = new Intent(Intent.ACTION_FACTORY_RESET);
+            intent.setPackage("android");
+            intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+            intent.putExtra(Intent.EXTRA_REASON, "Wipe button used in power actions");
+            mContext.sendBroadcast(intent);
+            return false;
+        }
+
+        @Override
+        public boolean shouldBeSeparated() {
+            return false;
+        }
+
+        @Override
+        public View create(
+                Context context, View convertView, ViewGroup parent, LayoutInflater inflater) {
+            View v = super.create(context, convertView, parent, inflater);
+            int iconColor = context.getResources().getColor(com.android.systemui.R.color.GM2_grey_800);
+            int backgroundColor = context.getResources().getColor(com.android.systemui.R.color.wipe_button_background);
+            TextView messageView = v.findViewById(R.id.message);
+            messageView.setSelected(true); // necessary for marquee to work
+            ImageView icon = v.findViewById(R.id.icon);
+            icon.getDrawable().setTint(iconColor);
+            icon.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
+            v.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
+            return v;
+        }
+
+        @Override
+        public boolean showDuringKeyguard() {
+            return true;
+        }
+
+        @Override
+        public boolean showBeforeProvisioning() {
+            return false;
+        }
+    }
+
     @VisibleForTesting
     protected abstract class EmergencyAction extends SinglePressAction {
         EmergencyAction(int iconResId, int messageResId) {
@@ -916,6 +965,17 @@ public class GlobalActionsDialogLite implements DialogInterface.OnDismissListene
         @Override
         public void onPress() {
             mEmergencyAffordanceManager.performEmergencyCall();
+        }
+    }
+
+    private class WipeImplAction extends WipeAction {
+        WipeImplAction() {
+            super(R.drawable.wipe_icon, R.string.global_action_wipe);
+        }
+
+        @Override
+        public void onPress() {
+            Toast.makeText(mContext, mContext.getString(R.string.global_action_wipe_hint), Toast.LENGTH_LONG).show();
         }
     }
 
