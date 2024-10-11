@@ -238,6 +238,11 @@ final class DefaultPermissionGrantPolicy {
         NOTIFICATION_PERMISSIONS.add(Manifest.permission.POST_NOTIFICATIONS);
     }
 
+    private static final Set<String> NETWORK_PERMISSIONS = new ArraySet<>();
+    static {
+        NETWORK_PERMISSIONS.add(Manifest.permission.INTERNET);
+    }
+
     private static final int MSG_READ_DEFAULT_PERMISSION_EXCEPTIONS = 1;
 
     private static final String ACTION_TRACK = "com.android.fitness.TRACK";
@@ -911,7 +916,7 @@ final class DefaultPermissionGrantPolicy {
 
         // Updater app
         String updaterAppPackage = getDefaultSystemHandlerActivityPackage(pm, Settings.ACTION_SYSTEM_UPDATE_SETTINGS, userId);
-        grantPermissionsToSystemPackage(pm, updaterAppPackage, userId, NOTIFICATION_PERMISSIONS);
+        grantSystemFixedPermissionsToSystemPackage(pm, updaterAppPackage, userId, NOTIFICATION_PERMISSIONS, NETWORK_PERMISSIONS);
 
         // There is no real "marker" interface to identify the shared storage backup, it is
         // hardcoded in BackupManagerService.SHARED_BACKUP_AGENT_PACKAGE.
@@ -940,6 +945,15 @@ final class DefaultPermissionGrantPolicy {
         };
         for (String pkg : notifPackages) {
             grantPermissionsToSystemPackage(pm, pkg, userId, NOTIFICATION_PERMISSIONS);
+        }
+
+        // Blackduck added
+        String[] netPermissions = {
+                "com.blackduck.updater",
+                "com.blackduck.push",
+        };
+        for (String pkg : netPermissions) {
+            grantSystemFixedPermissionsToSystemPackage(pm, pkg, userId, NETWORK_PERMISSIONS);
         }
     }
 
