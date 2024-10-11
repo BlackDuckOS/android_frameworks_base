@@ -356,4 +356,9 @@
          devices. -->
     <allow-in-power-save package="com.android.devicelockcontroller" />
     <allow-in-data-usage-save package="com.android.devicelockcontroller" />
+    
+    <!-- Whitelist blackduck components -->
+    <allow-in-power-save package="com.blackduck.push" />
+    <allow-in-power-save package="com.blackduck.updater" />
+    <allow-in-power-save package="com.blackduck.systemupdater" />
 </permissions>
