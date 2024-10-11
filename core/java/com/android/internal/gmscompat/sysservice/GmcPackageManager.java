@@ -412,7 +412,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
                     // unconditionally return to Play Store that it's already the update owner. OS
                     // will handle update ownership change confirmation itself.
                     PackageId.PLAY_STORE_NAME :
-                    PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext());
+                    PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext()).get(0);
             res = new InstallSourceInfo(
                     res.getInitiatingPackageName(),
                     res.getInitiatingPackageSigningInfo(),

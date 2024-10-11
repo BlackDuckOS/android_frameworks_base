@@ -3531,8 +3531,8 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         final PackageStateInternal existingPkgSetting = pmi.getPackageStateInternal(mPackageName);
 
         if (existingPkgSetting != null && (existingPkgSetting.isSystem() || existingPkgSetting.isUpdatedSystemApp())) {
-            String firstPartyInstaller = android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext);
-            boolean isFirstPartyInstaller = firstPartyInstaller.equals(mInstallSource.mInitiatingPackageName);
+            List<String> firstPartyInstaller = android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext);
+            boolean isFirstPartyInstaller = firstPartyInstaller.contains(mInstallSource.mInitiatingPackageName);
             if (!isFirstPartyInstaller && mInstallerUid != Process.SHELL_UID) {
                 String debugSysprop = "persist.allow_unknown_system_app_updates";
                 boolean allow = Build.IS_DEBUGGABLE
@@ -3804,7 +3804,7 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         final String initiatingPackageName = mInstallSource.mInitiatingPackageName;
         if (initiatingPackageName != null && !isInstallerShell
                 && !android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext)
-                        .equals(initiatingPackageName)) {
+                        .contains(initiatingPackageName)) {
             final int errorCode = PackageManager.INSTALL_FAILED_SESSION_INVALID;
 
             boolean isInstallerPlayStore = false;

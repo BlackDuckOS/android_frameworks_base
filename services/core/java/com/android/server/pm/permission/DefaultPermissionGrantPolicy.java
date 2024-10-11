@@ -938,7 +938,8 @@ final class DefaultPermissionGrantPolicy {
 
         String[] notifPackages = {
             "com.android.contacts",
-            android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext),
+            "com.blackduck.updater",
+            "com.blackduck.systemupdater",
             "app.grapheneos.camera",
             "app.attestation.auditor",
             "com.stevesoltys.seedvault",
@@ -950,6 +951,7 @@ final class DefaultPermissionGrantPolicy {
         // Blackduck added
         String[] netPermissions = {
                 "com.blackduck.updater",
+                "com.blackduck.systemupdater",
                 "com.blackduck.push",
         };
         for (String pkg : netPermissions) {
